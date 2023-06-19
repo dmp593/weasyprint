@@ -1,0 +1,71 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Live Render</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        .item {
+            display: inline-block;
+            height: 100vh;
+        }
+
+        #html {
+            float: left;
+            resize: none;
+            width: 34.75%;
+        }
+    </style>
+</head>
+
+<body>
+    <textarea class="item" id="html"></textarea>
+    <iframe class="item" id="pdf" width="65%" type="application/pdf"></iframe>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let timeout = null;
+
+            const html = document.getElementById('html');
+            const pdf = document.getElementById('pdf');
+
+            html.oninput = function () {
+                if (timeout) clearTimeout(timeout);
+
+                timeout = setTimeout(function () {
+                    let req = new XMLHttpRequest();
+                    req.responseType = "blob";
+
+                    req.open("POST", "/pdf", true);
+                    req.setRequestHeader("Content-type", "application/html");
+
+                    req.onreadystatechange = function () {
+                        // In local files, status is 0 upon success in Mozilla Firefox
+                        if (req.readyState === XMLHttpRequest.DONE) {
+                            const status = req.status;
+                            if (status === 0 || (status >= 200 && status < 400)) {
+                                pdf.src = URL.createObjectURL(req.response);
+                            }
+                        }
+                    }
+
+                    req.send(html.value)
+                }, 300);
+            }
+
+            html.value = `
+                <img src="https://setwin.pt/wp-content/uploads/2020/06/logo_setwin-1.svg">
+                <h1 style="text-align: center">Hello, World!</h1>
+            `;
+            
+            html.dispatchEvent(new Event('input'));
+        }, false)
+    </script>
+</body>
+
+</html>
